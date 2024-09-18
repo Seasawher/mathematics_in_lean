@@ -223,6 +223,9 @@ lemma chineseMap_surj [Fintype ι] {I : ι → Ideal R}
   -- 他の `j` に対しては `eᵢ in (R / I j) = 0` を満たす
   have key : ∀ i, ∃ e : R, mk (I i) e = 1 ∧ ∀ j, j ≠ i → mk (I j) e = 0 := by
     intro i
+
+    -- 仮定から `Iᵢ` と `Iⱼ (j ≠ i)` は互いに素なので、
+    -- 補題 isCoprime_Inf により `Iᵢ` と `⨅ j ≠ i, Iⱼ` も互いに素
     have hI' : ∀ j ∈ ({i} : Finset ι)ᶜ, IsCoprime (I i) (I j) := by
       intro j hj
       specialize hI i j
@@ -231,16 +234,55 @@ lemma chineseMap_surj [Fintype ι] {I : ι → Ideal R}
       exact fun a ↦ hj (id (Eq.symm a))
     replace hI' := isCoprime_Inf hI'
     clear * - hI'
+
+    -- `I i` と `⨅ j ≠ i, I j` が互いに素なので足すと全体になる
     replace hI' : (I i) + (⨅ j ∈ ({i} : Finset ι)ᶜ, I j) = 1 := by
       exact IsCoprime.add_eq hI'
-    set K := ⨅ j ∈ ({i} : Finset ι)ᶜ, I j with hK
-    replace hI' : ∃ x ∈ I i, ∃ y ∈ K, x + y = 1 := by
-      sorry
-    sorry
-  choose e he using key
-  use mk _ (∑ i, f i * e i)
-  sorry
 
+    -- `K := ⨅ j ∈ ({i} : Finset ι)ᶜ, I j` とおく。
+    set K := ⨅ j ∈ ({i} : Finset ι)ᶜ, I j with hK
+
+    -- 足して１になる元が存在する
+    replace hI' : ∃ x ∈ I i, ∃ y ∈ K, x + y = 1 := by
+      exact add_eq_one_iff.mp hI'
+    replace ⟨x, hx, y, hy, hI'⟩ := hI'
+
+    -- 求める e の構成
+    exists y
+
+    -- y が所望の性質を満たすことを示したい。
+    constructor
+    case left =>
+      have : y = 1 - x := by rw [← hI']; ring
+      rw [this]
+      simp [eq_zero_iff_mem.mpr hx]
+    case right =>
+      intro j hj
+      apply eq_zero_iff_mem.mpr
+      simp_all
+
+  -- 添え字の族 `e : ι → R` であって、
+  -- 常に `eᵢ = 1 (mod Iᵢ)` かつ `eᵢ = 0 (mod Iⱼ) (j ≠ i)` を満たすものを取ることができる
+  choose e he using key
+
+  -- `∑ (fᵢ * eᵢ)` が求める `a` であることを示したい。
+  use mk _ (∑ i, f i * e i)
+
+  -- 各 i 成分を調べればよい
+  ext i
+  rw [chineseMap_mk', map_sum, Fintype.sum_eq_single i]
+  · specialize hf i
+    specialize he i
+    obtain ⟨hel, her⟩ := he
+    simp_all [hf, hel]
+  · intro j hj
+    specialize hf j
+    specialize he j
+    obtain ⟨_hel, her⟩ := he
+    replace her := her i (by aesop)
+    simp_all [her]
+
+/-- 中国式剰余定理の同型 -/
 noncomputable def chineseIso [Fintype ι] (f : ι → Ideal R)
     (hf : ∀ i j, i ≠ j → IsCoprime (f i) (f j)) : (R ⧸ ⨅ i, f i) ≃+* Π i, R ⧸ f i :=
   { Equiv.ofBijective _ ⟨chineseMap_inj f, chineseMap_surj hf⟩,
@@ -248,6 +290,8 @@ noncomputable def chineseIso [Fintype ι] (f : ι → Ideal R)
 
 end
 
+-- R 代数の話
+-- 係数環 R は可換で、A はただの環
 example {R A : Type*} [CommRing R] [Ring A] [Algebra R A] (r r' : R) (a : A) :
     (r + r') • a = r • a + r' • a :=
   add_smul r r' a
@@ -257,7 +301,10 @@ example {R A : Type*} [CommRing R] [Ring A] [Algebra R A] (r r' : R) (a : A) :
   mul_smul r r' a
 
 section Polynomials
+-- 多項式の話
 open Polynomial
+
+-- R は可換環
 
 example {R : Type*} [CommRing R] : R[X] := X
 
@@ -274,6 +321,14 @@ example {R : Type*} [CommRing R] : (X ^ 2 + 2 * X + C 3 : R[X]).coeff 1 = 2 := b
 example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} :
     degree (p * q) = degree p + degree q :=
   Polynomial.degree_mul
+
+-- WithBot N の足し算はどう定義されているんですか？
+example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} :
+    degree (p * q) = degree p + degree q := by
+  dsimp [(· + ·), HAdd.hAdd]
+  -- Option.map を使って実装していた
+  #check WithBot.add
+  sorry
 
 example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} (hp : p ≠ 0) (hq : q ≠ 0) :
     natDegree (p * q) = natDegree p + natDegree q :=
