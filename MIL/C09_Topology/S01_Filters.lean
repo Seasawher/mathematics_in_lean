@@ -3,19 +3,48 @@ import Mathlib.Topology.Instances.Real
 
 open Set Filter Topology
 
-def principal {α : Type*} (s : Set α) : Filter α
-    where
-  sets := { t | s ⊆ t }
-  univ_sets := sorry
-  sets_of_superset := sorry
-  inter_sets := sorry
+/- ## フィルターとは？
+集合 `A` の部分集合の集まり `F` がフィルターであるとは、
+1. `A` 全体が F に属する
+2. もし `x ∈ F` かつ `x ⊆ y` ならば `y ∈ F`
+3. もし `x ∈ F` かつ `y ∈ F` ならば `x ∩ y ∈ F`
 
+例：ある点 `x` の周りの近傍全体
+-/
+
+/-- 自明なフィルターの例。ある部分集合 `S ⊆ α` があれば、
+「`S` を含む集合の全体」はフィルターになる。 -/
+def principal {α : Type*} (s : Set α) : Filter α where
+  sets := { t | s ⊆ t }
+  univ_sets := by simp
+  sets_of_superset := by
+    intro X Y hx hxy a ha
+    aesop
+  inter_sets := by
+    intro x y hx hy a ha
+    aesop
+
+/-- 自然数 ℕ 上のフィルターの例。
+『「有限個を除いて、すべての自然数を含んでいる集合」を集めたもの』はフィルターになる。
+-/
 example : Filter ℕ :=
   { sets := { s | ∃ a, ∀ b, a ≤ b → b ∈ s }
-    univ_sets := sorry
-    sets_of_superset := sorry
-    inter_sets := sorry }
+    univ_sets := by simp
+    sets_of_superset := by
+      intro x y hx hxy
+      dsimp only [mem_setOf_eq] at *
+      replace ⟨a, hx⟩ := hx
+      use a
+      aesop
+    inter_sets := by
+      intro x y hx hy
+      dsimp only [mem_setOf_eq] at *
+      replace ⟨ax, hx⟩ := hx
+      replace ⟨ay, hy⟩ := hy
+      use max ax ay
+      aesop }
 
+/--  -/
 def Tendsto₁ {X Y : Type*} (f : X → Y) (F : Filter X) (G : Filter Y) :=
   ∀ V ∈ G, f ⁻¹' V ∈ F
 
@@ -102,4 +131,3 @@ example (P Q R : ℕ → Prop) (hP : ∀ᶠ n in atTop, P n) (hQ : ∀ᶠ n in a
 example (u : ℕ → ℝ) (M : Set ℝ) (x : ℝ) (hux : Tendsto u atTop (𝓝 x))
     (huM : ∀ᶠ n in atTop, u n ∈ M) : x ∈ closure M :=
   sorry
-
