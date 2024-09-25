@@ -323,38 +323,47 @@ example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} :
   Polynomial.degree_mul
 
 -- WithBot N の足し算はどう定義されているんですか？
+/-- 多項式の次数は、掛け算を足し算に変える -/
 example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} :
     degree (p * q) = degree p + degree q := by
-  dsimp [(· + ·), HAdd.hAdd]
-  -- Option.map を使って実装していた
-  #check WithBot.add
-  sorry
+  rw [@degree_mul]
 
+/-- 返り値が `ℕ ∪ {- ∞}` ではなくて普通の Nat になってる次数関数もある -/
 example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} (hp : p ≠ 0) (hq : q ≠ 0) :
     natDegree (p * q) = natDegree p + natDegree q :=
   Polynomial.natDegree_mul hp hq
 
+/-- 多項式の合成の次数は、それぞれの次数の積 -/
 example {R : Type*} [Semiring R] [NoZeroDivisors R] {p q : R[X]} :
     natDegree (comp p q) = natDegree p * natDegree q :=
   Polynomial.natDegree_comp
 
+/-- 多項式 `P : R[X]` を、点 `x : R` において評価することができる -/
 example {R : Type*} [CommRing R] (P: R[X]) (x : R) := P.eval x
 
+/-- 多項式 `X - r` の `X = r` での値はゼロ -/
 example {R : Type*} [CommRing R] (r : R) : (X - C r).eval r = 0 := by simp
 
+/-- 多項式 `P : R[X]` の根とは、そこでの値がゼロになる点 -/
 example {R : Type*} [CommRing R] (P : R[X]) (r : R) : IsRoot P r ↔ P.eval r = 0 := Iff.rfl
 
+/-- 多項式の roots とは、重複度を込めた根の集合。
+多項式 `X - r` の根の集合は `{r}` -/
 example {R : Type*} [CommRing R] [IsDomain R] (r : R) : (X - C r).roots = {r} :=
   roots_X_sub_C r
 
+/-- 多項式 `(X - r)^n` の根の全体は、`{r, ... , r}` みたいなやつ -/
 example {R : Type*} [CommRing R] [IsDomain R] (r : R) (n : ℕ):
     ((X - C r) ^ n).roots = n • {r} :=
   by simp
 
+/-- `aeval : R[X] → A` は R 代数としての準同型で、`X := x` と代入するもの -/
 example : aeval Complex.I (X ^ 2 + 1 : ℝ[X]) = 0 := by simp
 
 open Complex Polynomial
 
+/-- 実数係数多項式 `x ^ 2 + 1 : ℝ[X]` を複素数係数多項式だと思ったときに、
+根の集合は `{√-1, -√-1}` -/
 example : aroots (X ^ 2 + 1 : ℝ[X]) ℂ = {Complex.I, -I} := by
   suffices roots (X ^ 2 + 1 : ℂ[X]) = {I, -I} by simpa [aroots_def]
   have factored : (X ^ 2 + 1 : ℂ[X]) = (X - C I) * (X - C (-I)) := by
@@ -370,14 +379,18 @@ example : aroots (X ^ 2 + 1 : ℝ[X]) ℂ = {Complex.I, -I} := by
 -- Mathlib knows about D'Alembert-Gauss theorem: ``ℂ`` is algebraically closed.
 example : IsAlgClosed ℂ := inferInstance
 
+-- 実数を複素数に変換する環準同型
 #check (Complex.ofReal : ℝ →+* ℂ)
 
+/-- 環準同型 `f : R → S` で多項式 `p : R[X]` を `S[X]` に変換してから `x : S` を代入して評価する -/
 example : (X ^ 2 + 1 : ℝ[X]).eval₂ Complex.ofReal Complex.I = 0 := by simp
 
 open MvPolynomial
 
+/-- 円の多項式(多変数多項式の例) -/
 def circleEquation : MvPolynomial (Fin 2) ℝ := X 0 ^ 2 + X 1 ^ 2 - 1
 
+/-- (0, 1) が円周 x^2 + y^2 = 1 に載っている -/
 example : MvPolynomial.eval ![0, 1] circleEquation = 0 := by simp [circleEquation]
 
 end Polynomials
