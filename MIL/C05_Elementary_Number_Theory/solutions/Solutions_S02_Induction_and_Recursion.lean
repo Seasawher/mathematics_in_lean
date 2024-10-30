@@ -1,5 +1,4 @@
 import Mathlib.Data.Nat.GCD.Basic
-import Mathlib.Algebra.BigOperators.Basic
 import MIL.Common
 
 def fac : ℕ → ℕ
@@ -34,7 +33,7 @@ theorem sum_sqr (n : ℕ) : ∑ i in range (n + 1), i ^ 2 = n * (n + 1) * (2 * n
 
 end
 
-inductive MyNat
+inductive MyNat where
   | zero : MyNat
   | succ : MyNat → MyNat
 

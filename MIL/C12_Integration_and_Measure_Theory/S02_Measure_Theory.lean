@@ -1,5 +1,5 @@
 import MIL.Common
-import Mathlib.Analysis.NormedSpace.FiniteDimension
+import Mathlib.Analysis.Normed.Module.FiniteDimension
 import Mathlib.Analysis.Convolution
 import Mathlib.MeasureTheory.Function.Jacobian
 import Mathlib.MeasureTheory.Integral.Bochner
@@ -45,5 +45,5 @@ example {f : ℕ → Set α} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwi
     μ (⋃ i, f i) = ∑' i, μ (f i) :=
   μ.m_iUnion hmeas hdis
 
-example {P : α → Prop} : (∀ᵐ x ∂μ, P x) ↔ ∀ᶠ x in μ.ae, P x :=
+example {P : α → Prop} : (∀ᵐ x ∂μ, P x) ↔ ∀ᶠ x in ae μ, P x :=
   Iff.rfl
